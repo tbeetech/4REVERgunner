@@ -1,0 +1,63 @@
+# Godot 4 .gitignore
+
+# Godot-specific ignores
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+
+# Exported executables and builds
+*.exe
+*.pck
+*.zip
+*.app
+*.dmg
+*.apk
+*.aab
+builds/
+build/
+dist/
+
+# Mono-specific ignores (if using C#)
+.mono/
+data_*/
+mono_crash.*.json
+
+# Editor settings and caches
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+*.bak
+*.log
+*~
+
+# OS-specific files
+Thumbs.db
+Desktop.ini
+.directory
+._*
+
+# Temporary and backup files
+*.autosave
+*.backup
+*.blend1
+*.blend2
+
+# Android build files
+.gradle/
+local.properties
+*.keystore
+*.jks
+
+# iOS/macOS build files
+*.dSYM/
+xcuserdata/
+DerivedData/
+
+# Logs and debug output
+*.log
+logs/
+debug/
