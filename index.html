@@ -230,6 +230,8 @@ const WEAPON_DEFS = {
   missile: { cooldown: 1.8  },
 };
 
+const WEAPON_MAX_AMMO = { rifle: Infinity, bomb: 3, drone: 2, missile: 4 };
+
 // ============================================================
 // Three.js globals
 // ============================================================
@@ -272,7 +274,7 @@ let betweenTimer  = 0;
 
 // Weapons
 let currentWeapon  = 'rifle';
-let weaponAmmo     = { rifle: Infinity, bomb: 3, drone: 2, missile: 4 };
+let weaponAmmo     = { ...WEAPON_MAX_AMMO };
 let weaponCooldowns = { rifle: 0, bomb: 0, drone: 0, missile: 0 };
 
 // Screen shake
@@ -299,6 +301,11 @@ const hitOverlay    = document.getElementById('hit-overlay');
 const waveAnnEl     = document.getElementById('wave-announce');
 const announceNum   = document.getElementById('announce-num');
 const betweenBanner = document.getElementById('between-banner');
+
+// Cached weapon HUD refs
+const wsSlots  = { rifle: document.getElementById('ws-rifle'),   bomb: document.getElementById('ws-bomb'),   drone: document.getElementById('ws-drone'),   missile: document.getElementById('ws-missile')  };
+const wsAmmos  = { rifle: document.getElementById('wa-rifle'),   bomb: document.getElementById('wa-bomb'),   drone: document.getElementById('wa-drone'),   missile: document.getElementById('wa-missile')  };
+const wsCdFills= { rifle: document.getElementById('wcd-rifle'),  bomb: document.getElementById('wcd-bomb'),  drone: document.getElementById('wcd-drone'),  missile: document.getElementById('wcd-missile') };
 
 // ============================================================
 // INIT
@@ -341,7 +348,9 @@ function initThree() {
   sun.shadow.camera.left = sun.shadow.camera.bottom = -sc;
   sun.shadow.camera.right = sun.shadow.camera.top = sc;
   scene.add(sun);
-  scene.add(Object.assign(new THREE.DirectionalLight(0x0033ff, 0.4), { position: new THREE.Vector3(-10,5,-10) }));
+  const fill2 = new THREE.DirectionalLight(0x0033ff, 0.4);
+  fill2.position.set(-10, 5, -10);
+  scene.add(fill2);
 
   buildArena();
 
@@ -833,7 +842,7 @@ function beginWave() {
   betweenBanner.style.opacity = '0';
 
   // Refill ammo
-  weaponAmmo = { rifle: Infinity, bomb: 3, drone: 2, missile: 4 };
+  weaponAmmo = { ...WEAPON_MAX_AMMO };
   for (const w in weaponCooldowns) weaponCooldowns[w] = 0;
 
   announceNum.textContent = wave;
@@ -885,22 +894,16 @@ function updateHUD() {
 }
 
 function updateWeaponHUD() {
-  const names = ['rifle','bomb','drone','missile'];
-  const maxAmmo = { rifle: Infinity, bomb: 3, drone: 2, missile: 4 };
-  names.forEach(w => {
-    const slot = document.getElementById('ws-' + w);
-    const ammoEl = document.getElementById('wa-' + w);
-    const cdEl   = document.getElementById('wcd-' + w);
-
-    slot.classList.toggle('active', w === currentWeapon);
-    ammoEl.textContent = weaponAmmo[w] === Infinity ? '∞' : weaponAmmo[w];
+  for (const w of ['rifle','bomb','drone','missile']) {
+    wsSlots[w].classList.toggle('active', w === currentWeapon);
+    wsAmmos[w].textContent = weaponAmmo[w] === Infinity ? '∞' : weaponAmmo[w];
 
     const maxCd = WEAPON_DEFS[w].cooldown;
     const fill = weaponCooldowns[w] > 0
       ? (1 - weaponCooldowns[w] / maxCd) * 100
       : 100;
-    cdEl.style.width = fill + '%';
-  });
+    wsCdFills[w].style.width = fill + '%';
+  }
 }
 
 // ============================================================
@@ -1202,7 +1205,7 @@ function startGame() {
   waveAlive = 0; waveSpawned = 0;
   betweenWaves = false;
   currentWeapon = 'rifle';
-  weaponAmmo    = { rifle: Infinity, bomb: 3, drone: 2, missile: 4 };
+  weaponAmmo    = { ...WEAPON_MAX_AMMO };
   weaponCooldowns = { rifle: 0, bomb: 0, drone: 0, missile: 0 };
   shakeTimer = 0; shakeIntensity = 0;
 
