@@ -348,9 +348,9 @@ function initThree() {
   sun.shadow.camera.left = sun.shadow.camera.bottom = -sc;
   sun.shadow.camera.right = sun.shadow.camera.top = sc;
   scene.add(sun);
-  const fill2 = new THREE.DirectionalLight(0x0033ff, 0.4);
-  fill2.position.set(-10, 5, -10);
-  scene.add(fill2);
+  const fillLight = new THREE.DirectionalLight(0x0033ff, 0.4);
+  fillLight.position.set(-10, 5, -10);
+  scene.add(fillLight);
 
   buildArena();
 
@@ -497,7 +497,7 @@ function spawnEnemy() {
 
   const bodyMesh = new THREE.Mesh(
     new THREE.BoxGeometry(s*0.85, s*1.25, s*0.85),
-    new THREE.MeshLambertMaterial({ color: def.color, emissive: new THREE.Color(def.color), emissiveIntensity: 0.35 })
+    new THREE.MeshLambertMaterial({ color: def.color, emissive: def.color, emissiveIntensity: 0.35 })
   );
   bodyMesh.position.y = s*0.62; bodyMesh.castShadow = true;
   group.add(bodyMesh);
@@ -555,6 +555,8 @@ function fireBullet() {
     .subVectors(aimTarget, playerGroup.position)
     .setY(0).normalize();
   if (dir.lengthSq() < 0.001) return;
+
+  weaponCooldowns.rifle = WEAPON_DEFS.rifle.cooldown;
 
   const spawnPos = playerGroup.position.clone()
     .addScaledVector(dir, 0.55).setY(0.9);
@@ -625,7 +627,7 @@ function fireDrone() {
 
   const body = new THREE.Mesh(
     new THREE.OctahedronGeometry(0.4),
-    new THREE.MeshLambertMaterial({ color: 0x00ffcc, emissive: new THREE.Color(0x00ffcc), emissiveIntensity: 0.6 })
+    new THREE.MeshLambertMaterial({ color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 0.6 })
   );
   group.add(body);
 
@@ -664,13 +666,13 @@ function fireMissile() {
 
   const body = new THREE.Mesh(
     new THREE.CylinderGeometry(0.1, 0.1, 0.6, 8),
-    new THREE.MeshLambertMaterial({ color: 0xff4400, emissive: new THREE.Color(0xff4400), emissiveIntensity: 0.5 })
+    new THREE.MeshLambertMaterial({ color: 0xff4400, emissive: 0xff4400, emissiveIntensity: 0.5 })
   );
   group.add(body);
 
   const cone = new THREE.Mesh(
     new THREE.ConeGeometry(0.1, 0.25, 8),
-    new THREE.MeshLambertMaterial({ color: 0xff8800, emissive: new THREE.Color(0xff8800), emissiveIntensity: 0.5 })
+    new THREE.MeshLambertMaterial({ color: 0xff8800, emissive: 0xff8800, emissiveIntensity: 0.5 })
   );
   cone.position.y = 0.42;
   group.add(cone);
@@ -689,7 +691,7 @@ function fireMissile() {
 // ============================================================
 function fireCurrentWeapon() {
   switch (currentWeapon) {
-    case 'rifle':   fireBullet(); weaponCooldowns.rifle = WEAPON_DEFS.rifle.cooldown; break;
+    case 'rifle':   fireBullet(); break;
     case 'bomb':    fireBomb();   break;
     case 'drone':   fireDrone();  break;
     case 'missile': fireMissile(); break;
@@ -749,9 +751,11 @@ function spawnExplosion(pos, radius, color) {
 // ============================================================
 // SCREEN SHAKE
 // ============================================================
+let shakeDuration = 0.4;
 function screenShake(intensity, duration) {
   shakeIntensity = intensity;
   shakeTimer = duration;
+  shakeDuration = duration;
 }
 
 // ============================================================
@@ -865,7 +869,7 @@ function tickCamera(dt) {
 
   // Screen shake
   if (shakeTimer > 0) {
-    const pct = shakeTimer / 0.4;
+    const pct = shakeTimer / shakeDuration;
     tx += (Math.random()-0.5) * 2 * shakeIntensity * pct;
     tz += (Math.random()-0.5) * 2 * shakeIntensity * pct;
     shakeTimer -= dt;
@@ -1043,14 +1047,14 @@ function update(dt) {
       if (dr.shootTimer <= 0 && nearDist < 25) {
         dr.shootTimer = 0.4;
         // Spawn small cyan bullet
-        const dir2 = new THREE.Vector3().subVectors(nearest.group.position, dr.group.position).setY(0).normalize();
+        const droneAimDir = new THREE.Vector3().subVectors(nearest.group.position, dr.group.position).setY(0).normalize();
         const bMesh = new THREE.Mesh(
           new THREE.SphereGeometry(0.09, 4, 4),
           new THREE.MeshBasicMaterial({ color: 0x00ffcc })
         );
         bMesh.position.copy(dr.group.position);
         scene.add(bMesh);
-        bullets.push({ mesh: bMesh, dir: dir2, life: 2.0, dmg: 0.5 });
+        bullets.push({ mesh: bMesh, dir: droneAimDir, life: 2.0, dmg: 0.5 });
       }
     }
 
